@@ -1,0 +1,12 @@
+CREATE SCHEMA IF NOT EXISTS private;
+GRANT USAGE ON SCHEMA private TO authenticated;
+ALTER FUNCTION public.feed_posts() SET SCHEMA private;
+ALTER FUNCTION public.post_comments(uuid) SET SCHEMA private;
+GRANT EXECUTE ON FUNCTION private.feed_posts() TO authenticated;
+GRANT EXECUTE ON FUNCTION private.post_comments(uuid) TO authenticated;
+CREATE FUNCTION public.feed_posts() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path = public AS $$ SELECT private.feed_posts() $$;
+CREATE FUNCTION public.post_comments(target_post uuid) RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path = public AS $$ SELECT private.post_comments(target_post) $$;
+REVOKE ALL ON FUNCTION public.feed_posts() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.post_comments(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.feed_posts() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.post_comments(uuid) TO authenticated;

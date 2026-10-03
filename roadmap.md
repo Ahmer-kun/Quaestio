@@ -1,0 +1,4 @@
+- [x] Build reference-led welcome and writing interface.
+- [x] Set up persistent accounts, profiles, posts, comments, and ownership policies.
+- [x] Connect account creation, publishing, feed, comments, editing, deletion, and settings.
+- [x] Verify desktop/mobile rendering and signed-in flow.
