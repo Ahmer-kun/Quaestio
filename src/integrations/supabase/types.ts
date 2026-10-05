@@ -142,6 +142,7 @@ export type Database = {
         Returns: boolean
       }
       feed_posts: { Args: never; Returns: Json }
+      my_profile: { Args: never; Returns: Json }
       post_comments: { Args: { target_post: string }; Returns: Json }
     }
     Enums: {
