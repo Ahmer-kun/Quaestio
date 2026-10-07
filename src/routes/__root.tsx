@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { DEFAULT_DESCRIPTION, websiteJsonLd } from "../lib/seo";
+import { SITE_NAME } from "../lib/site";
 
 function NotFoundComponent() {
   return (
@@ -79,10 +81,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "The Question" },
-      { name: "description", content: "A quiet space for life’s biggest questions." },
-      { property: "og:title", content: "The Question" },
-      { property: "og:description", content: "A quiet space for life’s biggest questions." },
+      { name: "description", content: DEFAULT_DESCRIPTION },
+      { name: "robots", content: "index,follow,max-image-preview:large" },
+      { property: "og:site_name", content: SITE_NAME },
+      { property: "og:locale", content: "en_US" },
       { property: "og:type", content: "website" },
+      { name: "theme-color", content: "#020404" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
@@ -91,7 +95,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
+      { rel: "manifest", href: "/site.webmanifest" },
     ],
+    scripts: [{ type: "application/ld+json", children: websiteJsonLd }],
   }),
   shellComponent: RootShell,
   component: RootComponent,

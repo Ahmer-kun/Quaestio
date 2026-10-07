@@ -1,10 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowLeft, ArrowRight, Ellipsis, MessageCircle, PenLine, UserRound } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import nightHills from "@/assets/night-hills.jpg";
+import { pageSeo } from "@/lib/seo";
+import nightHills from "@/assets/night-hills.webp";
 
 type Identity = "username" | "real_name" | "anonymous";
 type Screen = "welcome" | "question" | "signup" | "login" | "story" | "identity" | "feed" | "mine" | "detail" | "settings";
@@ -25,14 +26,13 @@ const exactDate = (date: string) => new Intl.DateTimeFormat(undefined, { year: "
 const shortDate = (date: string) => new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(date));
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [
-    { title: "The Question — Stories about what matters" },
-    { name: "description", content: "A quiet space to share the question you are trying to answer most in your life right now." },
-    { property: "og:title", content: "The Question — Stories about what matters" },
-    { property: "og:description", content: "A quiet space to share the question you are trying to answer most in your life right now." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => {
+    const seo = pageSeo({
+      title: "The Question — Stories about what matters",
+      description: "A quiet space to share the question you are trying to answer most in your life right now.",
+    });
+    return { meta: seo.meta, links: seo.links };
+  },
   component: App,
 });
 
@@ -148,7 +148,7 @@ function App() {
   const feedCard = (post: Post) => <article key={post.id} className="story-card"><div className="mb-5 flex items-start gap-3"><div className="h-8 w-8 shrink-0 rounded-full border border-border flex items-center justify-center text-muted-foreground"><UserRound size={15} /></div><div className="min-w-0"><div className="text-xs">{post.display_name}</div><time className="text-[11px] text-muted-foreground" dateTime={post.created_at} title={exactDate(post.created_at)}>{shortDate(post.created_at)}</time></div></div><Button variant="link" className="h-auto p-0 text-left whitespace-normal text-foreground hover:text-primary justify-start" onClick={() => openPost(post)}><h2 className="story-heading">{post.question}</h2></Button><p className="mt-4 font-serif text-[15px] leading-7 text-muted-foreground line-clamp-3 whitespace-pre-wrap">{post.story}</p><div className="mt-6 flex items-center gap-5 text-xs text-muted-foreground"><Button variant="link" onClick={() => openPost(post)} className="quiet-link h-auto p-0"><MessageCircle size={14} /> {post.comment_count}</Button><time dateTime={post.created_at} title={exactDate(post.created_at)}>{exactDate(post.created_at)}</time></div></article>;
 
   return <div className="editorial-shell">{nav}<main key={screen} className="page-enter">
-    {!ready ? <div className="mx-auto max-w-xl px-6 pt-24 text-sm text-muted-foreground">Opening…</div> : screen === "welcome" ? <section className="welcome-scene relative flex min-h-[calc(100svh-72px)] flex-col justify-between px-6 py-12 md:px-[9vw] md:py-20"><img src={nightHills} alt="A crescent moon above a quiet hillside at dusk" width={1536} height={1024} className="welcome-landscape" /><div className="relative z-10 mt-[10vh] max-w-2xl"><p className="eyebrow mb-8">01 / 05</p><h1 className="editorial-title max-w-xl">There is probably<br />one question you keep<br />coming back to.</h1><p className="editorial-subtitle mt-10 max-w-xs">Maybe you don’t know how to answer it yet.<br />That’s okay.</p></div><Button variant="link" className="quiet-link relative z-10 w-fit h-auto p-0 mb-4" onClick={() => go(userId ? "question" : "signup")}><span className="w-5 h-px bg-muted-foreground" /> Scroll to continue <ArrowDown size={14} /></Button></section>
+    {!ready || screen === "welcome" ? <section className="welcome-scene relative flex min-h-[calc(100svh-72px)] flex-col justify-between px-6 py-12 md:px-[9vw] md:py-20"><img src={nightHills} alt="A crescent moon above a quiet hillside at dusk" width={1200} height={896} fetchPriority="high" decoding="async" className="welcome-landscape" /><div className="relative z-10 mt-[10vh] max-w-2xl"><p className="eyebrow mb-8">01 / 05</p><h1 className="editorial-title max-w-xl">There is probably<br />one question you keep<br />coming back to.</h1><p className="editorial-subtitle mt-10 max-w-xs">Maybe you don’t know how to answer it yet.<br />That’s okay.</p></div><Button variant="link" className="quiet-link relative z-10 w-fit h-auto p-0 mb-4" onClick={() => go(userId ? "question" : "signup")}><span className="w-5 h-px bg-muted-foreground" /> Scroll to continue <ArrowDown size={14} /></Button><footer className="relative z-10 mb-4"><Link to="/about" className="quiet-link h-auto">About The Question</Link></footer></section>
     : screen === "question" ? <section className="mx-auto max-w-2xl px-6 pt-20 pb-20 md:pt-28"><p className="eyebrow mb-7">03 / 05</p><h1 className="editorial-title max-w-xl">What question are you<br className="hidden sm:block" /> trying to answer most<br className="hidden sm:block" /> in your life right now?</h1><textarea className="quiet-input mt-10 min-h-36 resize-y" placeholder="Write it here…" aria-label="Your question" maxLength={500} value={question} onChange={(e) => setQuestion(e.target.value)} /><p className="text-right text-[11px] text-muted-foreground mt-2">{question.length}/500</p>{formError}<div className="mt-5">{smallButton("Next", () => { const check = questionSchema.safeParse(question); if (!check.success) { setError(check.error.issues[0]?.message ?? "Write your question."); return; } go("story"); })}</div></section>
     : screen === "signup" || screen === "login" ? <section className="mx-auto max-w-xl px-6 pt-20 pb-20 md:pt-28">{screen === "signup" && <p className="eyebrow mb-7">02 / 05</p>}<h1 className="editorial-title">{screen === "signup" ? "Create your account" : "Log in to your account"}</h1>{screen === "signup" && <p className="editorial-subtitle mt-3">Choose a unique username and a strong password.</p>}<form className="mt-9 space-y-5" onSubmit={(e) => { e.preventDefault(); account(screen === "signup" ? "signup" : "login"); }}><label className="block text-xs">Username<input className="quiet-input mt-2" autoComplete="username" placeholder="e.g. nightowl" value={username} maxLength={24} onChange={(e) => setUsername(e.target.value)} required /></label><label className="block text-xs">Password<input className="quiet-input mt-2" type="password" autoComplete={screen === "signup" ? "new-password" : "current-password"} placeholder="At least 8 characters" value={password} minLength={8} onChange={(e) => setPassword(e.target.value)} required /></label>{formError}<Button type="submit" disabled={busy} className="rounded-[2px] h-9 px-5 text-xs">{busy ? "Please wait…" : screen === "signup" ? "Create account" : "Log in"}</Button></form>{screen === "signup" && <p className="mt-6 text-xs text-muted-foreground">There is no password recovery, so keep your password somewhere safe.</p>}<p className="mt-6 text-xs text-muted-foreground">{screen === "signup" ? "Already have an account?" : "New here?"} <Button variant="link" className="quiet-link h-auto p-0 underline" onClick={() => go(screen === "signup" ? "login" : "signup")}>{screen === "signup" ? "Log in" : "Create account"}</Button></p></section>
     : screen === "story" ? <section className="mx-auto max-w-2xl px-6 pt-16 pb-20 md:pt-24"><div className="flex justify-between items-center mb-9"><p className="eyebrow">04 / 05</p>{back(editingPost ? "mine" : "feed", "Cancel")}</div><h1 className="editorial-title">{editingPost ? "Edit your story" : "Write your story"}</h1><p className="editorial-subtitle mt-3">Tell us what you’re thinking about. It can be a short or long story — there’s no right or wrong way to share.</p><p className="mt-8 text-xs text-muted-foreground">{question}</p><textarea className="quiet-input mt-5 min-h-64 resize-y" placeholder="Start writing here…" aria-label="Your story" maxLength={10000} value={story} onChange={(e) => setStory(e.target.value)} /><p className="text-right text-[11px] text-muted-foreground mt-2">{story.length}/10000</p>{formError}<div className="mt-6 text-right">{smallButton("Next", () => { const check = storySchema.safeParse(story); if (!check.success) { setError(check.error.issues[0]?.message ?? "Write your story."); return; } go("identity"); })}</div></section>
