@@ -53,6 +53,19 @@ Or connect the repository in Vercel and let it run the same build on every push.
 Migrations live in `supabase/migrations/`. Apply pending ones with `supabase db push`, or paste the
 SQL into the Supabase **SQL Editor**.
 
+## Admin setup
+
+Moderation lives at `/admin` and is open only to accounts listed in the `admins` table. After
+applying the migrations, seed your own admin by hand in the Supabase **SQL Editor** — there is no
+way to create an admin from the app:
+
+```sql
+insert into public.admins (user_id)
+select id from auth.users where email = 'MYUSERNAME@the-question.local';
+```
+
+Replace `MYUSERNAME` with your username. Then sign in on the main page and visit `/admin`.
+
 ## Built with
 
 - TanStack Start

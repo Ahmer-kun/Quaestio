@@ -121,11 +121,146 @@ export type Database = {
         }
         Relationships: []
       }
+      admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bans: {
+        Row: {
+          banned_at: string
+          banned_by: string | null
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          banned_at?: string
+          banned_by?: string | null
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          banned_at?: string
+          banned_by?: string | null
+          id?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moderation_log: {
+        Row: {
+          action: string
+          admin_id: string | null
+          created_at: string
+          id: string
+          note: string | null
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          note: string | null
+          reporter_id: string
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          reporter_id: string
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          reporter_id?: string
+          status?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_ban_author_of: {
+        Args: { p_type: string; p_target: string; p_reason: string }
+        Returns: string
+      }
+      admin_bans: { Args: never; Returns: Json }
+      admin_delete_content: {
+        Args: { p_type: string; p_target: string }
+        Returns: boolean
+      }
+      admin_reports: { Args: { p_status?: string }; Returns: Json }
+      admin_resolve_report: {
+        Args: { p_report: string; p_status: string }
+        Returns: boolean
+      }
+      admin_stats: { Args: never; Returns: Json }
+      admin_unban: { Args: { p_ban: string }; Returns: boolean }
+      am_i_banned: { Args: never; Returns: boolean }
       delete_own_comment: { Args: { target_id: string }; Returns: boolean }
       delete_own_post: { Args: { target_id: string }; Returns: boolean }
       edit_own_comment: {
@@ -142,8 +277,18 @@ export type Database = {
         Returns: boolean
       }
       feed_posts: { Args: never; Returns: Json }
+      is_admin: { Args: never; Returns: boolean }
       my_profile: { Args: never; Returns: Json }
       post_comments: { Args: { target_post: string }; Returns: Json }
+      report_content: {
+        Args: {
+          p_category: string
+          p_note: string
+          p_target: string
+          p_type: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

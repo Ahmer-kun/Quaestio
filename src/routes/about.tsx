@@ -80,7 +80,8 @@ function About() {
           You sign up with just a username and a strong password — no email address. There is no
           password recovery, so keep your password somewhere safe. We make no promises beyond what
           you can see: if you post a story, assume it can be read, so share only what you are
-          comfortable having other members read.
+          comfortable having other members read. If something here seems harmful, you can report it,
+          and a moderator can act on that report or restrict the account responsible.
         </p>
 
         <Link to="/" className="quiet-link mt-14 inline-block underline underline-offset-4">
