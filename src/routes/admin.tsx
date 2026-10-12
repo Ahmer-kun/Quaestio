@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { banAuthor, unban } from "@/lib/admin.functions";
+import { banAuthor, banUser, unban } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -40,7 +40,22 @@ type ReportRow = {
   author_banned: boolean;
 };
 
-type BanRow = { ban_id: string; reason: string | null; banned_at: string };
+type BanRow = { ban_id: string; username: string; reason: string | null; banned_at: string };
+
+type MemberRow = {
+  id: string;
+  username: string;
+  created_at: string;
+  banned: boolean;
+  ban_id: string | null;
+  is_admin: boolean;
+};
+
+type BanTarget =
+  | { kind: "report"; report: ReportRow; alsoDelete: boolean }
+  | { kind: "member"; member: MemberRow };
+
+const MEMBER_PAGE_SIZE = 50;
 
 const CATEGORY_LABELS: Record<string, string> = {
   harassment: "Harassment",
@@ -89,12 +104,16 @@ function AdminPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [bans, setBans] = useState<BanRow[]>([]);
+  const [members, setMembers] = useState<MemberRow[]>([]);
+  const [memberTotal, setMemberTotal] = useState(0);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberQuery, setMemberQuery] = useState("");
+  const [memberPage, setMemberPage] = useState(0);
   const [tab, setTab] = useState<ReportStatus>("open");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
-  const [banEntry, setBanEntry] = useState<ReportRow | null>(null);
-  const [banAlsoDelete, setBanAlsoDelete] = useState(false);
+  const [banTarget, setBanTarget] = useState<BanTarget | null>(null);
   const [banReason, setBanReason] = useState("");
 
   useEffect(() => {
@@ -144,9 +163,29 @@ function AdminPage() {
     setReports((data ?? []) as ReportRow[]);
   }, []);
 
+  const refreshMembers = useCallback(async (search: string, page: number) => {
+    const { data, error: err } = await supabase.rpc("admin_members", {
+      p_search: search || null,
+      p_limit: MEMBER_PAGE_SIZE,
+      p_offset: page * MEMBER_PAGE_SIZE,
+    });
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    const payload = (data ?? null) as { total: number; members: MemberRow[] } | null;
+    setMembers(payload?.members ?? []);
+    setMemberTotal(payload?.total ?? 0);
+  }, []);
+
   const refreshAll = useCallback(async () => {
-    await Promise.all([refreshStats(), refreshBans(), refreshReports(tab)]);
-  }, [refreshStats, refreshBans, refreshReports, tab]);
+    await Promise.all([
+      refreshStats(),
+      refreshBans(),
+      refreshReports(tab),
+      refreshMembers(memberQuery, memberPage),
+    ]);
+  }, [refreshStats, refreshBans, refreshReports, tab, refreshMembers, memberQuery, memberPage]);
 
   useEffect(() => {
     if (gate !== "ok") return;
@@ -158,6 +197,19 @@ function AdminPage() {
     if (gate !== "ok") return;
     void refreshReports(tab);
   }, [gate, tab, refreshReports]);
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setMemberQuery(memberSearch.trim());
+      setMemberPage(0);
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [memberSearch]);
+
+  useEffect(() => {
+    if (gate !== "ok") return;
+    void refreshMembers(memberQuery, memberPage);
+  }, [gate, memberQuery, memberPage, refreshMembers]);
 
   const run = async (action: () => Promise<void>) => {
     setError("");
@@ -198,30 +250,42 @@ function AdminPage() {
     setError("");
     setNotice("");
     setBanReason("");
-    setBanAlsoDelete(alsoDelete);
-    setBanEntry(report);
+    setBanTarget({ kind: "report", report, alsoDelete });
+  };
+
+  const openRestrict = (member: MemberRow) => {
+    setError("");
+    setNotice("");
+    setBanReason("");
+    setBanTarget({ kind: "member", member });
   };
 
   const submitBan = () =>
     run(async () => {
-      if (!banEntry) return;
-      if (banAlsoDelete) {
-        const { error: delErr } = await supabase.rpc("admin_delete_content", {
-          p_type: banEntry.target_type,
-          p_target: banEntry.target_id,
+      if (!banTarget) return;
+      if (banTarget.kind === "report") {
+        if (banTarget.alsoDelete) {
+          const { error: delErr } = await supabase.rpc("admin_delete_content", {
+            p_type: banTarget.report.target_type,
+            p_target: banTarget.report.target_id,
+          });
+          if (delErr) throw new Error(delErr.message);
+        }
+        const result = await banAuthor({
+          data: {
+            type: banTarget.report.target_type,
+            targetId: banTarget.report.target_id,
+            reason: banReason,
+          },
         });
-        if (delErr) throw new Error(delErr.message);
+        if (result.warning) setNotice(result.warning);
+      } else {
+        const result = await banUser({
+          data: { userId: banTarget.member.id, reason: banReason },
+        });
+        if (result.warning) setNotice(result.warning);
       }
-      const result = await banAuthor({
-        data: {
-          type: banEntry.target_type,
-          targetId: banEntry.target_id,
-          reason: banReason,
-        },
-      });
-      if (result.warning) setNotice(result.warning);
-      setBanEntry(null);
-      setBanAlsoDelete(false);
+      setBanTarget(null);
       setBanReason("");
       await refreshAll();
     });
@@ -330,6 +394,98 @@ function AdminPage() {
         </section>
 
         <section className="mt-12">
+          <h2 className="eyebrow mb-4">Members</h2>
+          <input
+            type="search"
+            className="quiet-input max-w-xs"
+            placeholder="Search usernames"
+            value={memberSearch}
+            onChange={(event) => setMemberSearch(event.target.value)}
+          />
+          <ul className="mt-5 divide-y divide-border rounded-[3px] border border-border">
+            {members.map((member) => {
+              const status = member.is_admin ? "Admin" : member.banned ? "Restricted" : "Active";
+              return (
+                <li
+                  key={member.id}
+                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm">{member.username}</p>
+                    <time
+                      className="text-[11px] text-muted-foreground"
+                      dateTime={member.created_at}
+                    >
+                      Joined {exactDate(member.created_at)}
+                    </time>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span
+                      className={`text-[11px] uppercase tracking-wide ${
+                        member.is_admin || member.banned
+                          ? "text-foreground"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {status}
+                    </span>
+                    {!member.is_admin &&
+                      (member.banned ? (
+                        <Button
+                          variant="link"
+                          className="quiet-link h-auto p-0"
+                          disabled={busy}
+                          onClick={() => {
+                            if (member.ban_id) void undoBan(member.ban_id);
+                          }}
+                        >
+                          Unban
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="link"
+                          className="quiet-link h-auto p-0"
+                          disabled={busy}
+                          onClick={() => openRestrict(member)}
+                        >
+                          Restrict
+                        </Button>
+                      ))}
+                  </div>
+                </li>
+              );
+            })}
+            {members.length === 0 && (
+              <li className="px-4 py-6 font-serif text-lg text-muted-foreground">
+                No members found.
+              </li>
+            )}
+          </ul>
+
+          <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+            <Button
+              variant="link"
+              className="quiet-link h-auto p-0"
+              disabled={busy || memberPage === 0}
+              onClick={() => setMemberPage((page) => Math.max(0, page - 1))}
+            >
+              Previous
+            </Button>
+            <span>
+              {memberTotal} {memberTotal === 1 ? "member" : "members"}
+            </span>
+            <Button
+              variant="link"
+              className="quiet-link h-auto p-0"
+              disabled={busy || memberPage * MEMBER_PAGE_SIZE + members.length >= memberTotal}
+              onClick={() => setMemberPage((page) => page + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </section>
+
+        <section className="mt-12">
           <h2 className="eyebrow mb-4">Reports</h2>
           <div className="flex gap-6 border-b border-border pb-3">
             {STATUS_TABS.map((status) => (
@@ -434,7 +590,8 @@ function AdminPage() {
                 className="story-card !p-4 flex flex-wrap items-center justify-between gap-3"
               >
                 <div className="min-w-0">
-                  <p className="text-sm">{ban.reason || "No reason given"}</p>
+                  <p className="text-sm">{ban.username}</p>
+                  <p className="text-sm text-muted-foreground">{ban.reason || "No reason given"}</p>
                   <time className="text-[11px] text-muted-foreground" dateTime={ban.banned_at}>
                     {exactDate(ban.banned_at)}
                   </time>
@@ -456,21 +613,27 @@ function AdminPage() {
         </section>
       </main>
 
-      {banEntry && (
+      {banTarget && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
           role="dialog"
           aria-modal="true"
-          onClick={() => setBanEntry(null)}
+          onClick={() => setBanTarget(null)}
         >
           <div
             className="w-full max-w-md rounded-[3px] border border-border bg-card p-6"
             onClick={(event) => event.stopPropagation()}
           >
-            <h2 className="font-serif text-xl">Restrict this author?</h2>
+            <h2 className="font-serif text-xl">
+              {banTarget.kind === "report"
+                ? "Restrict this author?"
+                : `Restrict @${banTarget.member.username}?`}
+            </h2>
             <p className="mt-3 text-xs text-muted-foreground">
               They can still read, but will not be able to post, comment or edit.
-              {banAlsoDelete ? " The reported content will also be deleted." : ""}
+              {banTarget.kind === "report" && banTarget.alsoDelete
+                ? " The reported content will also be deleted."
+                : ""}
             </p>
             <label className="mt-4 block text-xs">
               Reason (optional)
@@ -485,7 +648,7 @@ function AdminPage() {
               <Button
                 variant="link"
                 className="quiet-link h-auto p-0"
-                onClick={() => setBanEntry(null)}
+                onClick={() => setBanTarget(null)}
               >
                 Cancel
               </Button>

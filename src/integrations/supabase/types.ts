@@ -248,10 +248,18 @@ export type Database = {
         Args: { p_type: string; p_target: string; p_reason: string }
         Returns: string
       }
+      admin_ban_user: {
+        Args: { p_user: string; p_reason: string }
+        Returns: string
+      }
       admin_bans: { Args: never; Returns: Json }
       admin_delete_content: {
         Args: { p_type: string; p_target: string }
         Returns: boolean
+      }
+      admin_members: {
+        Args: { p_search?: string | null; p_limit?: number; p_offset?: number }
+        Returns: Json
       }
       admin_reports: { Args: { p_status?: string }; Returns: Json }
       admin_resolve_report: {

@@ -58,6 +58,39 @@ export const banAuthor = createServerFn({ method: "POST" })
     return { ok: true as const, warning };
   });
 
+export const banUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    z.object({
+      userId: z.string().uuid(),
+      reason: z.string().max(500).optional(),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase);
+
+    const { data: banId, error } = await context.supabase.rpc("admin_ban_user", {
+      p_user: data.userId,
+      p_reason: data.reason ?? "",
+    });
+    if (error) throw new Error(error.message);
+    if (!banId) throw new Error("This account could not be restricted.");
+
+    let warning: string | null = null;
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+        ban_duration: "876000h",
+      });
+      if (authError) throw new Error(authError.message);
+    } catch (err) {
+      warning = SERVICE_ROLE_WARNING;
+      console.error("[admin.banUser]", err);
+    }
+
+    return { ok: true as const, warning };
+  });
+
 export const unban = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ banId: z.string().uuid() }))
