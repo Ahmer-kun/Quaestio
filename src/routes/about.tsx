@@ -5,7 +5,7 @@ import { pageSeo } from "@/lib/seo";
 const aboutSeo = pageSeo({
   title: "About — The Question",
   description:
-    "A quiet place to write about the question you are trying to answer most in your life — under your username, your real name, or anonymously.",
+    "Write down the one question you can't stop thinking about, plus the story behind it. Post under your name or anonymously. Members only.",
   path: "/about",
 });
 
@@ -31,57 +31,53 @@ function About() {
         <p className="eyebrow mb-7">About</p>
         <h1 className="editorial-title">About The Question</h1>
         <p className="editorial-subtitle mt-8">
-          The Question is a quiet corner of the internet for people who are working something out.
+          The Question is a small site where you write down the one question you can't stop thinking
+          about, and then tell the story behind it.
         </p>
 
-        <h2 className="font-serif text-2xl mt-14 mb-4">What it is</h2>
+        <h2 className="font-serif text-2xl mt-14 mb-4">Why I made it</h2>
         <p className="font-serif text-[16px] leading-7 text-muted-foreground">
-          The Question is a simple writing space, built around a single prompt: what is the question
-          you are trying to answer most in your life right now? Not a trivia question, and not a
-          headline — the one that keeps coming back to you at odd hours. You write it down, and then
-          you write the story that sits behind it: why it matters, where it came from, what you have
-          tried, and what you are still unsure about.
+          I noticed that the questions I cared about most were the ones I never said out loud. They'd
+          go around in my head for months, and when I finally tried to explain one to someone, I'd
+          realize I'd never actually put it into words. Writing it down always helped me, so I built
+          a place to do that and to read what other people are working through.
         </p>
 
-        <h2 className="font-serif text-2xl mt-14 mb-4">Who it is for</h2>
+        <h2 className="font-serif text-2xl mt-14 mb-4">What you do here</h2>
         <p className="font-serif text-[16px] leading-7 text-muted-foreground">
-          It is for anyone who thinks better in writing. If you have ever kept a private journal, or
-          typed a long message to a friend and then deleted it, or lain awake turning the same
-          thought over — this is a place for you. You do not need to be a writer, and no one is
-          grading your sentences. You just need one honest question and a little time to answer it.
+          You get one prompt: what's the question you're trying to answer most right now? Not a
+          trivia question. The one that keeps coming back to you at 3 a.m. Write it in a sentence or
+          two. Then write whatever sits behind it: where it came from, what you've tried, what you
+          still don't know. It can be a paragraph or five pages.
         </p>
-
-        <h2 className="font-serif text-2xl mt-14 mb-4">How it works</h2>
-        <p className="font-serif text-[16px] leading-7 text-muted-foreground">
-          The flow is short and deliberate.
-        </p>
-        <ul className="mt-4 space-y-3 font-serif text-[16px] leading-7 text-muted-foreground">
-          <li>
-            <span className="text-foreground">1. Share your question.</span> Write the question you
-            are trying to answer; a sentence or two is enough.
-          </li>
-          <li>
-            <span className="text-foreground">2. Write your story.</span> Tell what lies behind the
-            question, in your own words and at your own length. There is no required shape.
-          </li>
-          <li>
-            <span className="text-foreground">3. Choose how your name appears.</span> You can
-            publish under your username, under your real name (once you add it), or anonymously as
-            “Anonymous.” Readers see only the name you chose for each post.
-          </li>
-        </ul>
         <p className="mt-4 font-serif text-[16px] leading-7 text-muted-foreground">
-          Stories appear on the members' feed beside everyone else’s, and you can always edit or delete
-          your own posts and comments.
+          Other members can read your story and leave a comment. That's about it. There are no likes
+          and no followers.
+        </p>
+
+        <h2 className="font-serif text-2xl mt-14 mb-4">Your name</h2>
+        <p className="font-serif text-[16px] leading-7 text-muted-foreground">
+          When you publish, you pick how your name shows up: your username, your real name if you've
+          added one, or just "Anonymous". You choose for each post, and other members only see the
+          name you picked.
         </p>
 
         <h2 className="font-serif text-2xl mt-14 mb-4">Accounts</h2>
         <p className="font-serif text-[16px] leading-7 text-muted-foreground">
-          You sign up with just a username and a strong password — no email address. There is no
-          password recovery, so keep your password somewhere safe. We make no promises beyond what
-          you can see: if you post a story, assume it can be read, so share only what you are
-          comfortable having other members read. If something here seems harmful, you can report it,
-          and a moderator can act on that report or restrict the account responsible.
+          You sign up with a username and a password. No email. The catch is that I can't reset a
+          forgotten password, so write it down somewhere. If you lose it, the account is gone.
+        </p>
+        <p className="mt-4 font-serif text-[16px] leading-7 text-muted-foreground">
+          Stories are only visible to people with an account. They aren't public and search engines
+          can't read them. Still, assume other members can read what you post, and only share what
+          you're comfortable with them reading. You can edit or delete your own posts and comments.
+        </p>
+
+        <h2 className="font-serif text-2xl mt-14 mb-4">If something's wrong</h2>
+        <p className="font-serif text-[16px] leading-7 text-muted-foreground">
+          Every post and comment has a Report button. I read the reports myself. "Anonymous" means
+          other members can't tell who wrote something, but I can act on a report, and that can mean
+          restricting the account behind it.
         </p>
 
         <Link to="/" className="quiet-link mt-14 inline-block underline underline-offset-4">
