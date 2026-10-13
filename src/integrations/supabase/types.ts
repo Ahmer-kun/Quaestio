@@ -288,6 +288,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       my_profile: { Args: never; Returns: Json }
       post_comments: { Args: { target_post: string }; Returns: Json }
+      purge_orphan_reports: { Args: never; Returns: number }
       report_content: {
         Args: {
           p_category: string

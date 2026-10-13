@@ -70,7 +70,12 @@ function About() {
         <p className="mt-4 font-serif text-[16px] leading-7 text-muted-foreground">
           Stories are only visible to people with an account. They aren't public and search engines
           can't read them. Still, assume other members can read what you post, and only share what
-          you're comfortable with them reading. You can edit or delete your own posts and comments.
+          you're comfortable with them reading. You can edit or delete your own posts and comments,
+          or your whole account from Settings. The{" "}
+          <Link to="/privacy" className="underline underline-offset-4">
+            privacy policy
+          </Link>{" "}
+          explains what's kept and what isn't.
         </p>
 
         <h2 className="font-serif text-2xl mt-14 mb-4">If something's wrong</h2>
