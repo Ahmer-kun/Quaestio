@@ -43,7 +43,7 @@ function Privacy() {
       <main className="mx-auto max-w-2xl px-6 pt-16 pb-24 md:pt-24">
         <p className="eyebrow mb-7">Privacy</p>
         <h1 className="editorial-title">Privacy Policy</h1>
-        <p className="mt-3 text-xs text-muted-foreground">Last updated: October 13, 2026</p>
+        <p className="mt-3 text-xs text-muted-foreground">Last updated: October 14, 2026</p>
         <p className="editorial-subtitle mt-8">
           This page explains what The Question collects about you, what I do with it, and what you
           can do about it. I've tried to keep it plain. If anything is unclear, write to me at{" "}
@@ -98,6 +98,11 @@ function Privacy() {
           <li>
             Your browser stores a login token (in local storage) so you stay signed in. The site has
             no analytics, no ad networks and no tracking cookies.
+          </li>
+          <li>
+            A short-lived record of when your account posts or comments, used to enforce posting
+            limits. It holds a timestamp, not any text, and is deleted after a few days or when you
+            delete your account.
           </li>
         </ul>
 
